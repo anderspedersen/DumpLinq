@@ -1,4 +1,5 @@
 ﻿# DumpLinq
+[![NuGet](https://img.shields.io/nuget/v/DumpLinq)](https://www.nuget.org/packages/DumpLinq/)
 
 DumpLinq is a library for querying .NET memory dumps using familiar LINQ syntax. It is built on top of ClrMD and provides higher-level abstractions that simplify navigating the dump.
 
