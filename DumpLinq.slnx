@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="src/DumpLinq/DumpLinq.csproj" />
+  <Project Path="src/DumpLinqRunner/DumpLinqRunner.csproj" />
+  <Project Path="src/ExampleDump/ExampleDump.csproj" />
+</Solution>
