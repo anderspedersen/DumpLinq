@@ -67,8 +67,9 @@ This returns a `DumpObject` for every independently allocated object whose full 
 
 ### Accessing Fields
 
-`DumpObject DumpObject.GetField(string name)` returns a `DumpObject` that represents the object stored in the specified 
-field. 
+`DumpObject DumpObject.GetField(string name)` 
+
+Returns a `DumpObject` that represents the object stored in the specified field. 
 
 In DumpLinq, everything on the heap is represented as a `DumpObject`, including 
 - Reference types
