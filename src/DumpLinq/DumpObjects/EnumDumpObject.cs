@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Text;
 using Microsoft.Diagnostics.Runtime;
@@ -30,7 +31,26 @@ internal class EnumDumpObject<T> : DumpObject where T : IEqualityOperators<T,T,b
     }
 
     public override ulong Address => _address;
+
+    public override bool TryRenderValue([NotNullWhen(true)] out string? value)
+    {
+        value = GetStringValue();
+        return true;
+    }
+
+    public override bool IsArray() => false;
     
+    public override IEnumerable<FieldInfo> GetFields()
+    {
+        return Enumerable.Empty<FieldInfo>();
+    }
+
+    public override bool TryGetError([NotNullWhen(true)] out string? error)
+    {
+        error = null;
+        return false;
+    }
+
     public override DumpObjectValue<TReturn> ReadAs<TReturn>()
     {
         if (Unsafe.SizeOf<TReturn>() == Unsafe.SizeOf<T>())

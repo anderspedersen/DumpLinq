@@ -11,7 +11,7 @@ public sealed class Dump : IDisposable
     private readonly ClrInfo _runtimeInfo;
     private readonly ClrRuntime _runtime;
     
-    private readonly Dictionary<string, Func<IUnmanagedValueReader, string?>> _valueRenders = new Dictionary<string, Func<IUnmanagedValueReader, string?>>();
+    private readonly Dictionary<string, Func<IUnmanagedValueReader, string>> _valueRenders = new Dictionary<string, Func<IUnmanagedValueReader, string>>();
     internal DumpObjectFactory Factory { get; }
 
     private Dump(DataTarget dataTarget, ClrInfo runtimeInfo, ClrRuntime runtime)
@@ -98,12 +98,12 @@ public sealed class Dump : IDisposable
         }
     }
 
-    private Func<IUnmanagedValueReader, string?> CreateReaderFunc<T>() where T : unmanaged
+    private Func<IUnmanagedValueReader, string> CreateReaderFunc<T>() where T : unmanaged
     {
-        return r => r.Read<T>().ToString();
+        return r => r.Read<T>().ToString()!;
     }
 
-    internal bool TryGetValueRender(string typeName, [MaybeNullWhen(false)]out Func<IUnmanagedValueReader, string?> renderer)
+    internal bool TryGetValueRender(string typeName, [MaybeNullWhen(false)]out Func<IUnmanagedValueReader, string> renderer)
     {
         return _valueRenders.TryGetValue(typeName, out renderer);
     }

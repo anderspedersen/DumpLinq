@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Text;
 
 namespace DumpLinq.DumpObjects;
 
@@ -34,6 +35,24 @@ internal class NullDumpObject : DumpObject
     }
 
     public override ulong Address => 0;
+    public override bool TryRenderValue([NotNullWhen(true)] out string? value)
+    {
+        value = "null";
+        return true;
+    }
+
+    public override bool IsArray() => false;
+    public override IEnumerable<FieldInfo> GetFields()
+    {
+        return Enumerable.Empty<FieldInfo>();
+    }
+
+    public override bool TryGetError([NotNullWhen(true)] out string? error)
+    {
+        error = null;
+        return false;
+    }
+
     public override DumpObjectValue<T> ReadAs<T>()
     {
         return DumpObjectValue<T>.CreateFromFailedDumpObject(ToString());

@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Text;
 using Microsoft.Diagnostics.Runtime;
 
 namespace DumpLinq.DumpObjects;
@@ -59,6 +60,25 @@ internal class ArrayDumpObject : DumpObject
     }
 
     public override ulong Address => _clrArray.Address;
+
+    public override bool TryRenderValue([NotNullWhen(true)] out string? value)
+    {
+        value = null;
+        return false;
+    }
+
+    public override bool IsArray() => true;
+    
+    public override IEnumerable<FieldInfo> GetFields()
+    {
+        yield return new FieldInfo("Length");
+    }
+
+    public override bool TryGetError([NotNullWhen(true)] out string? error)
+    {
+        error = null;
+        return false;
+    }
 
     public override DumpObjectValue<T> ReadAs<T>()
     {

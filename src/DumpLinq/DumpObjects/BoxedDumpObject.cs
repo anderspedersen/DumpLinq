@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using System.Text;
 using Microsoft.Diagnostics.Runtime;
 
@@ -27,15 +28,9 @@ internal class BoxedDumpObject : DumpObject
             .Append($"0x{_clrObject.Address:X16}")
             .Append(" (boxed)");
 
-        if (_clrObject.Type.IsPrimitive)
+        if (TryRenderValue(out var value))
         {
-            sb.Append(": ").Append(DumpObjectFactory.GetPrimitive(0, _clrObject.Type.ElementType, new UnboxingUnmanagedValueReader(_clrObject)).ToString());
-            return;
-        }
-
-        if (_owner.TryGetValueRender(_clrObject.Type.Name, out var renderer))
-        {
-            sb.Append(": ").Append(renderer(new UnboxingUnmanagedValueReader(_clrObject)));
+            sb.Append(": ").Append(value);
             return;
         }
 
@@ -55,6 +50,44 @@ internal class BoxedDumpObject : DumpObject
         }
     }
     public override ulong Address => _clrObject.Address;
+    
+    public override bool TryRenderValue([NotNullWhen(true)] out string? value)
+    {
+        if (_clrObject.Type.IsPrimitive)
+        {
+            value = DumpObjectFactory.GetPrimitive(
+                    0, 
+                    _clrObject.Type.ElementType, 
+                    new UnboxingUnmanagedValueReader(_clrObject)).ToString();
+            return true;
+        }
+
+        if (_owner.TryGetValueRender(_clrObject.Type.Name, out var renderer))
+        {
+            value = renderer(new UnboxingUnmanagedValueReader(_clrObject));
+            return true;
+        }
+
+        value = null;
+        return false;
+    }
+
+    public override bool IsArray() => false;
+    
+    public override IEnumerable<FieldInfo> GetFields()
+    {
+        foreach (var field in _clrObject.Type.Fields)
+        {
+            yield return new FieldInfo(field.Name);
+        }
+    }
+
+    public override bool TryGetError([NotNullWhen(true)] out string? error)
+    {
+        error = null;
+        return false;
+    }
+
     public override DumpObjectValue<T> ReadAs<T>()
     {
         if (Unsafe.SizeOf<T>() == (int) _clrObject.Size)

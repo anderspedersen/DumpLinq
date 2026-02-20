@@ -1,9 +1,10 @@
-﻿using System.Text;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Text;
 using Microsoft.Diagnostics.Runtime;
 
 namespace DumpLinq.DumpObjects;
 
-public class StringDumpObject : DumpObject
+internal class StringDumpObject : DumpObject
 {
     private readonly ClrObject _clrObject;
 
@@ -33,12 +34,31 @@ public class StringDumpObject : DumpObject
     }
 
     public override ulong Address => _clrObject.Address;
+    
+    public override bool TryRenderValue(out string? value)
+    {
+        value = AsString();
+        return true;
+    }
+
+    public override bool IsArray() => false;
+    public override IEnumerable<FieldInfo> GetFields()
+    {
+        return Enumerable.Empty<FieldInfo>();
+    }
+
+    public override bool TryGetError([NotNullWhen(true)] out string? error)
+    {
+        error = null;
+        return false;
+    }
+
     public override DumpObjectValue<T> ReadAs<T>()
     {
         return DumpObjectValue<T>.CreateFailedUnsupportedTypeForValueType(_clrObject.Type.Name);
     }
 
-    public override DumpObjectValue<string> AsString(int maxLength)
+    public override DumpObjectValue<string> AsString(int maxLength = 4096)
     {
         return DumpObjectValue<string>.Create(_clrObject.AsString(maxLength)!);
     }

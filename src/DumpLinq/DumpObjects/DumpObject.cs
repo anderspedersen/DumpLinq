@@ -1,7 +1,11 @@
-﻿using System.Text;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Text;
 
 namespace DumpLinq.DumpObjects;
 
+/// <summary>
+/// Represents an object on the heap.
+/// </summary>
 public abstract class DumpObject
 {   
     /// <summary>
@@ -20,6 +24,35 @@ public abstract class DumpObject
     /// </summary>
     /// <returns>The memory address of the object</returns>
     public abstract ulong Address { get; }
+
+    /// <summary>
+    /// Tries to render the value of this <see cref="DumpObject"/> as a string.
+    /// Will succeed if the <see cref="DumpObject"/> represents a string, a primitive type or a struct where
+    /// a formatter has been registered using <see cref="Dump.RegisterFormatter"/>.
+    /// </summary>
+    /// <param name="value">The value rendered as a string, or null if value couldn't be rendered.</param>
+    /// <returns>True if value could be rendered; otherwise, false</returns>
+    public abstract bool TryRenderValue([NotNullWhen(true)] out string? value);
+    
+    /// <summary>
+    /// Tests if this <see cref="DumpObject"/> represents an array.
+    /// </summary>
+    /// <returns>True <see cref="DumpObject"/> represents an array; otherwise, false</returns>
+    public abstract bool IsArray();
+    
+    /// <summary>
+    /// Enumerates all fields in object represented by this <see cref="DumpObject"/>.
+    /// </summary>
+    /// <returns>True <see cref="DumpObject"/> represents an array; otherwise, false</returns>
+    public abstract IEnumerable<FieldInfo> GetFields();
+    
+    /// <summary>
+    /// Tries to get the error message of this <see cref="DumpObject"/>.
+    /// Will only succeed if this is a failed <see cref="DumpObject"/>.
+    /// </summary>
+    /// <param name="error">The error messages of this <see cref="DumpObject"/>, or null if this is not a failed <see cref="DumpObject"/>.</param>
+    /// <returns>True if this is a failed <see cref="DumpObject"/>; otherwise, false</returns>
+    public abstract bool TryGetError([NotNullWhen(true)] out string? error);
     
     /// <summary>
     /// Reads the value represented by this <see cref="DumpObject"/> as type <typeparamref name="T"/>.

@@ -22,10 +22,9 @@ internal class ValueTypeDumpObject : DumpObject
     
     protected internal override void BuildString(StringBuilder sb, int depth, int arrayItems, int indention)
     {
-        if (_owner.TryGetValueRender(_clrValueType.Type.Name, out var renderer)
-            && TryGetValueReader(out var valueReader))
+        if (TryRenderValue(out var value))
         {
-            sb.Append(renderer(valueReader));
+            sb.Append(value);
             return;
         }
         
@@ -77,6 +76,34 @@ internal class ValueTypeDumpObject : DumpObject
     }
 
     public override ulong Address => _clrValueType.Address;
+    public override bool TryRenderValue([NotNullWhen(true)] out string? value)
+    {
+        if (_owner.TryGetValueRender(_clrValueType.Type.Name, out var renderer)
+            && TryGetValueReader(out var valueReader))
+        {
+            value = renderer(valueReader);
+            return true;
+        }
+
+        value = null;
+        return false;
+    }
+
+    public override bool IsArray() => false;
+    public override IEnumerable<FieldInfo> GetFields()
+    {
+        foreach (var field in _clrValueType.Type.Fields)
+        {
+            yield return new FieldInfo(field.Name);
+        }
+    }
+
+    public override bool TryGetError([NotNullWhen(true)] out string? error)
+    {
+        error = null;
+        return false;
+    }
+
     public override DumpObjectValue<T> ReadAs<T>()
     {
         if (TryGetField0(out var field0))

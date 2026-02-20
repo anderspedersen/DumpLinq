@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Text;
 using Microsoft.Diagnostics.Runtime;
 
 namespace DumpLinq.DumpObjects;
@@ -42,6 +43,27 @@ internal class ReferenceTypeDumpObject : DumpObject
     }
 
     public override ulong Address => _clrObject.Address;
+    public override bool TryRenderValue([NotNullWhen(true)] out string? value)
+    {
+        value = null;
+        return false;
+    }
+
+    public override bool IsArray() => false;
+    public override IEnumerable<FieldInfo> GetFields()
+    {
+        foreach (var field in _clrObject.Type.Fields)
+        {
+            yield return new FieldInfo(field.Name);
+        }
+    }
+
+    public override bool TryGetError([NotNullWhen(true)] out string? error)
+    {
+        error = null;
+        return false;
+    }
+
     public override DumpObjectValue<T> ReadAs<T>()
     {
         return DumpObjectValue<T>.CreateFailedUnsupportedTypeForValueType(_clrObject.Type.Name);
