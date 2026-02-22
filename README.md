@@ -137,3 +137,27 @@ var instances = dump.EnumerateHeapObjects("*.Foo")
 
 Returns a tree-like representation of the object. The `depth` parameter controls the maximum depth of nested objects to 
 include, and the `arrayItems` parameter controls the maximum number of elements to include from each array.
+
+# LINQPad support
+
+If you want to use DumpLinq with LINQPad, the NuGet package [DumpLinq.LINQPad](https://www.nuget.org/packages/DumpLinq.LINQPad/) provides a `ToDump` extension method
+for `DumpObject` It converts the object into an `ExpandoObject`, allowing you to explore it using LINQPad's interactive
+object viewer instead of DumpLinq's text-based tree output. The returned object is intended for use with 
+LINQPad's `Dump` method.
+
+[![LINQPad](doc/images/linqpadexpanded.png)]
+
+Like the `DumpObject.ToString` method, `DumpObject.ToDump` takes a `depth` parameter that controls how many 
+levels are expanded. Unlike the static string representation, in LINQPad objects beyond this level can be
+expanded lazily by clicking on them.
+
+[![LINQPad](doc/images/linqpadlazy.png)]
+
+Lazy expansion requires access to the underlying dump. If the `Dump` has already been disposed, expanding 
+deferred nodes will fail. For this reason, examples use:
+
+`var dump = Dump.Open(@"d:\ExampleDump.dmp");`
+
+rather than:
+
+`using var dump = Dump.Open(@"d:\ExampleDump.dmp");`
