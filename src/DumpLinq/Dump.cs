@@ -12,6 +12,7 @@ public sealed class Dump : IDisposable
     private readonly ClrRuntime _runtime;
     
     private readonly Dictionary<string, Func<IUnmanagedValueReader, string>> _valueRenders = new Dictionary<string, Func<IUnmanagedValueReader, string>>();
+    private HashSet<ulong>? _liveObjects;
     internal DumpObjectFactory Factory { get; }
 
     private Dump(DataTarget dataTarget, ClrInfo runtimeInfo, ClrRuntime runtime)
@@ -57,7 +58,7 @@ public sealed class Dump : IDisposable
     /// </summary>
     /// <param name="classNamePattern">Class name pattern. Supports wildcards (* and ?).</param>
     /// <returns>An enumerator for all matching heap objects.</returns>
-    public IEnumerable<DumpObject> EnumerateHeapObjects(string classNamePattern)
+    public IEnumerable<DumpObject> EnumerateHeapObjects(string classNamePattern, bool liveOnly = false)
     {
         string regexPattern = "^" +
                               Regex.Escape(classNamePattern)
@@ -67,7 +68,7 @@ public sealed class Dump : IDisposable
         
         var regex = new Regex(regexPattern);
         
-        return EnumerateHeapObjects(regex);
+        return EnumerateHeapObjects(regex, liveOnly);
     }
     
     /// <summary>
@@ -75,14 +76,19 @@ public sealed class Dump : IDisposable
     /// </summary>
     /// <param name="classNamePattern">Regular expression to match class names against.</param>
     /// <returns>An enumerator for all matching heap objects.</returns>
-    public IEnumerable<DumpObject> EnumerateHeapObjects(Regex classNamePattern)
+    public IEnumerable<DumpObject> EnumerateHeapObjects(Regex classNamePattern, bool liveOnly = false)
     {
         Dictionary<ulong, bool> matchCache = new Dictionary<ulong, bool>();
+
+        var liveObjects = liveOnly ? GetLiveObjects() : null;
         
         foreach (ClrObject obj in _runtime.Heap.EnumerateObjects())
         {
             // If heap corruption, continue past this object.
             if (!obj.IsValid)
+                continue;
+
+            if (liveObjects is not null && !liveObjects.Contains(obj.Address))
                 continue;
 
             if (!matchCache.TryGetValue(obj.Type.MethodTable, out var isMatch))
@@ -96,6 +102,38 @@ public sealed class Dump : IDisposable
 
             yield return Factory.CreateDumpObject(obj);
         }
+    }
+
+    private HashSet<ulong> GetLiveObjects()
+    {
+        if (_liveObjects is not null)
+            return _liveObjects;
+        
+        var stack = new Stack<ClrObject>();
+        var liveObjects = new HashSet<ulong>();
+
+        foreach (var root in _runtime.Heap.EnumerateRoots())
+        {
+            if (liveObjects.Add(root.Object.Address))
+            {
+                stack.Push(root.Object);
+            }
+        }
+
+        while (stack.Count > 0)
+        {
+            var obj = stack.Pop();
+            foreach (var objRef in obj.EnumerateReferences(carefully: true))
+            {
+                if (!objRef.IsNull && liveObjects.Add(objRef))
+                {
+                    stack.Push(objRef);
+                }
+            }
+        }
+
+        _liveObjects = liveObjects;
+        return liveObjects;
     }
 
     private Func<IUnmanagedValueReader, string> CreateReaderFunc<T>() where T : unmanaged
