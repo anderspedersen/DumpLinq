@@ -145,13 +145,13 @@ for `DumpObject` It converts the object into an `ExpandoObject`, allowing you to
 object viewer instead of DumpLinq's text-based tree output. The returned object is intended for use with 
 LINQPad's `Dump` method.
 
-[![LINQPad](doc/images/linqpadexpanded.png)]
+![LINQPad](doc/images/linqpadexpanded.png)
 
 Like the `DumpObject.ToString` method, `DumpObject.ToDump` takes a `depth` parameter that controls how many 
 levels are expanded. Unlike the static string representation, in LINQPad objects beyond this level can be
 expanded lazily by clicking on them.
 
-[![LINQPad](doc/images/linqpadlazy.png)]
+![LINQPad](doc/images/linqpadlazy.png)
 
 Lazy expansion requires access to the underlying dump. If the `Dump` has already been disposed, expanding 
 deferred nodes will fail. For this reason, examples use:
